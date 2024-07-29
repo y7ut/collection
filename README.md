@@ -1,10 +1,8 @@
 # collection
 
-基于泛型的集合操作，可以多补充些
+Generic collection
 
 ## Each
-
-### 仅作用于基础类型指针类型的数据集
 
 ```go
 type Book struct {
@@ -12,19 +10,16 @@ type Book struct {
     Price int
 }
 books := []*Book{
-    &{Name: "a", Price: 2},
-    &{Name: "b", Price: 3},
-    &{Name: "c", Price: 4},
+    {Name: "a", Price: 2},
+    {Name: "b", Price: 3},
+    {Name: "c", Price: 4},
 }
 collection.New(books).Each(func(b *Book){
     b.Price = b.Price + 1
 }).Value()
-
 ```
 
 ## Map
-
-### 比较万能
 
 ```go
 bookss := []Book{
@@ -36,11 +31,11 @@ bbbss := collection.New(bookss).Map(func(b Book) Book {
     b.Price = b.Price + 1
     return b
 }).Filter(func(i Book) bool {
-    return i.Price >= 3
+    return i.Price >= 4
 }).Value()
 
 for _, b := range bbbss {
-    fmt.Println(b.Price) // 3，4，5
+    fmt.Println(b.Price) // 4，5
 }
 ```
 
@@ -61,5 +56,75 @@ bb := collection.New(books).Each(func(b *Book) {
 for _, b := range bb {
     fmt.Println(b.Name) // 3，4
 }
+
+```
+
+## Merge
+
+```go
+bb := collection.New([]*Book{
+    {Name: "a", Price: 2},
+    {Name: "b", Price: 3},
+    {Name: "c", Price: 4},
+})
+
+bb.Merge(
+    collection.New(
+        []*Book{
+            {Name: "d", Price: 5},
+            {Name: "e", Price: 6},
+        },
+    ),
+    collection.New(
+        []*Book{
+            {Name: "f", Price: 7},
+            {Name: "g", Price: 8},
+        },
+    ),
+)
+
+
+for _, b := range bb.Value() {
+    fmt.Println(b.Price) // 2,3,4,5,6,7,8
+}
+
+```
+
+## Sort
+
+```go
+books := []*Book{
+    {Name: "a", Price: 2},
+    {Name: "b", Price: 3},
+    {Name: "c", Price: 4},
+}
+
+bb := collection.New(books).Sort(func(i, j *Book) bool {
+    return i.Price > j.Price
+}).Value()
+
+for _, b := range bb {
+    fmt.Println(b.Price) // 4,3,2
+}
+
+```
+
+## Peek
+
+```go
+books := []*Book{
+    {Name: "a", Price: 2},
+    {Name: "b", Price: 3},
+    {Name: "c", Price: 4},
+}
+
+bb := collection.New(books).Sort(func(i, j *Book) bool {
+    return i.Price > j.Price
+})
+
+fmt.Println(bb.Peek(0)) // 4
+fmt.Println(bb.Peekz(-1)) // 2
+
+
 
 ```

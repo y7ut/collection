@@ -328,3 +328,47 @@ func TestPeekCollection(t *testing.T) {
 		})
 	}
 }
+
+
+func TestMergeCollection(t *testing.T) {
+	type testCase[T item] struct {
+		name string
+		args [][]T
+		want []T
+	}
+	cases := []testCase[string]{
+		{
+			name: "string merge",
+			args: [][]string{
+				{"a", "b", "c"},
+				{"d", "e", "f"},
+			},
+			want: []string{"a", "b", "c", "d", "e", "f"},
+		},
+		{
+			name: "string merge",
+			args: [][]string{
+				{"a", "b", "c"},
+				{"d", "e", "f"},
+				{"d", "e", "f"},
+			},
+			want: []string{"a", "b", "c", "d", "e", "f", "d", "e", "f"},
+		},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+
+			base := New(tt.args[0])
+			args := new([]*Collection[string])
+			for _, v := range tt.args[1:] {
+				current := New(v)
+				*args = append(*args, current)
+			}
+
+			if base.Merge(*args...); !reflect.DeepEqual(base.Value(), tt.want) {
+				t.Errorf("New() = %v, want %v", base, tt.want)
+			}
+		})
+	}
+}
