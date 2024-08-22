@@ -17,6 +17,11 @@ books := []*Book{
 collection.New(books).Each(func(b *Book){
     b.Price = b.Price + 1
 }).Value()
+
+for b := range bbbss {
+    fmt.Println(b.Price) // 4，5
+}
+
 ```
 
 ## Map
@@ -34,7 +39,7 @@ bbbss := collection.New(bookss).Map(func(b Book) Book {
     return i.Price >= 4
 }).Value()
 
-for _, b := range bbbss {
+for b := range bbbss {
     fmt.Println(b.Price) // 4，5
 }
 ```
@@ -53,7 +58,7 @@ bb := collection.New(books).Each(func(b *Book) {
     return i.Price >= 4
 }).Value()
 
-for _, b := range bb {
+for b := range bb {
     fmt.Println(b.Name) // 3，4
 }
 
@@ -84,7 +89,7 @@ bb.Merge(
 )
 
 
-for _, b := range bb.Value() {
+for b := range bb.Value() {
     fmt.Println(b.Price) // 2,3,4,5,6,7,8
 }
 
@@ -103,7 +108,7 @@ bb := collection.New(books).Sort(func(i, j *Book) bool {
     return i.Price > j.Price
 }).Value()
 
-for _, b := range bb {
+for b := range bb {
     fmt.Println(b.Price) // 4,3,2
 }
 

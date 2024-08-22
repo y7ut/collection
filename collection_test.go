@@ -5,6 +5,47 @@ import (
 	"testing"
 )
 
+func TestAll(t *testing.T) {
+	type args[T item] struct {
+		d []T
+	}
+	type testCase[T item] struct {
+		name string
+		args args[T]
+		want []T
+	}
+
+	StringCases := []testCase[string]{
+		{
+			name: "String",
+			args: args[string]{
+				d: []string{"a", "b", "c"},
+			},
+			want: []string{
+				"a", "b", "c",
+			},
+		},
+	}
+
+	for _, tt := range StringCases {
+		t.Run(tt.name, func(t *testing.T) {
+			got := make([]string, 0)
+			kwant := 0
+			for k, v := range New(tt.args.d).All() {
+				if k != kwant {
+					t.Errorf("New() = %v, want %v", k, kwant)
+				}
+				got = append(got, v)
+				kwant++
+			}
+
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("New() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestValue(t *testing.T) {
 	type args[T item] struct {
 		d []T
@@ -29,7 +70,12 @@ func TestValue(t *testing.T) {
 
 	for _, tt := range StringCases {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := New(tt.args.d).Value(); !reflect.DeepEqual(got, tt.want) {
+			got := make([]string, 0)
+			for i := range New(tt.args.d).Value() {
+				got = append(got, i)
+			}
+
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("New() = %v, want %v", got, tt.want)
 			}
 		})
@@ -73,7 +119,7 @@ func TestFilter(t *testing.T) {
 
 	for _, tt := range IntCases {
 		t.Run(tt.name, func(t *testing.T) {
-			result := New(tt.args.d).Filter(tt.filter).Value()
+			result := New(tt.args.d).Filter(tt.filter).All()
 			wantt := make([]string, 0)
 			for _, v := range result {
 				wantt = append(wantt, v.Name)
@@ -117,7 +163,7 @@ func TestFilterPtr(t *testing.T) {
 
 	for _, tt := range IntCases {
 		t.Run(tt.name, func(t *testing.T) {
-			result := New(tt.args.d).Filter(tt.filter).Value()
+			result := New(tt.args.d).Filter(tt.filter).All()
 			wantt := make([]string, 0)
 			for _, v := range result {
 				wantt = append(wantt, v.Name)
@@ -161,7 +207,7 @@ func TestEachPtr(t *testing.T) {
 
 	for _, tt := range IntCases {
 		t.Run(tt.name, func(t *testing.T) {
-			result := New(tt.args.d).Each(tt.each).Value()
+			result := New(tt.args.d).Each(tt.each).All()
 			wantt := make([]int, 0)
 			for _, v := range result {
 				wantt = append(wantt, v.Price)
@@ -172,7 +218,6 @@ func TestEachPtr(t *testing.T) {
 		})
 	}
 }
-
 
 func TestSort(t *testing.T) {
 	type args[T item] struct {
@@ -253,7 +298,7 @@ func TestSort(t *testing.T) {
 	}
 	for _, tt := range IntCases {
 		t.Run(tt.name, func(t *testing.T) {
-			result := New(tt.args.d).Sort(tt.sort).Value()
+			result := New(tt.args.d).Sort(tt.sort).All()
 			wantt := make([]int, 0)
 			for _, v := range result {
 				wantt = append(wantt, v.Price)
@@ -264,7 +309,6 @@ func TestSort(t *testing.T) {
 		})
 	}
 }
-
 
 func TestPeekCollection(t *testing.T) {
 	type args[T item] struct {
@@ -281,7 +325,7 @@ func TestPeekCollection(t *testing.T) {
 		{
 			name: "string first",
 			args: args[string]{
-				d: []string{"a", "b", "c"},
+				d:     []string{"a", "b", "c"},
 				index: 0,
 			},
 			want: "a",
@@ -289,7 +333,7 @@ func TestPeekCollection(t *testing.T) {
 		{
 			name: "string last",
 			args: args[string]{
-				d: []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p"},
+				d:     []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p"},
 				index: 9,
 			},
 			want: "j",
@@ -297,7 +341,7 @@ func TestPeekCollection(t *testing.T) {
 		{
 			name: "string negative",
 			args: args[string]{
-				d: []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p"},
+				d:     []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p"},
 				index: -2,
 			},
 			want: "o",
@@ -305,7 +349,7 @@ func TestPeekCollection(t *testing.T) {
 		{
 			name: "string out of range",
 			args: args[string]{
-				d: []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p"},
+				d:     []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p"},
 				index: 17,
 			},
 			want: "",
@@ -313,7 +357,7 @@ func TestPeekCollection(t *testing.T) {
 		{
 			name: "string out of range",
 			args: args[string]{
-				d: []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p"},
+				d:     []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p"},
 				index: -27,
 			},
 			want: "",
@@ -328,7 +372,6 @@ func TestPeekCollection(t *testing.T) {
 		})
 	}
 }
-
 
 func TestMergeCollection(t *testing.T) {
 	type testCase[T item] struct {
@@ -358,16 +401,83 @@ func TestMergeCollection(t *testing.T) {
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-
 			base := New(tt.args[0])
 			args := new([]*Collection[string])
 			for _, v := range tt.args[1:] {
 				current := New(v)
 				*args = append(*args, current)
 			}
+			base.Merge(*args...)
+			res := make([]string, 0)
+			for v := range base.Value() {
+				res = append(res, v)
+			}
 
-			if base.Merge(*args...); !reflect.DeepEqual(base.Value(), tt.want) {
+			if !reflect.DeepEqual(res, tt.want) {
 				t.Errorf("New() = %v, want %v", base, tt.want)
+			}
+		})
+	}
+}
+
+func TestReverseCollection(t *testing.T) {
+	type testCase[T item] struct {
+		name string
+		args []T
+		want []T
+	}
+	cases := []testCase[string]{
+		{
+			name: "string reverse",
+			args: []string{"a", "b", "c"},
+			want: []string{"c", "b", "a"},
+		},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			base := New(tt.args)
+			base.Reverse()
+			res := make([]string, 0)
+			for v := range base.Value() {
+				res = append(res, v)
+			}
+
+			if !reflect.DeepEqual(res, tt.want) {
+				t.Errorf("New() = %v, want %v", base, tt.want)
+			}
+		})
+	}
+}
+
+func TestCloneCollection(t *testing.T) {
+	type testCase[T item] struct {
+		name string
+		args []T
+		want []T
+	}
+	cases := []testCase[string]{
+		{
+			name: "string clone",
+			args: []string{"a", "b", "c"},
+			want: []string{"a", "b", "c"},
+		},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			base := New(tt.args)
+			res := base.Clone()
+
+			base.Filter(func(i string) bool { return i == "a" })
+
+			ress := make([]string, 0)
+			for v := range res.Value() {
+				ress = append(ress, v)
+			}
+
+			if !reflect.DeepEqual(ress, tt.want) {
+				t.Errorf("New() = %v, want %v", ress, tt.want)
 			}
 		})
 	}

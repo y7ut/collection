@@ -39,7 +39,7 @@
 //					{Name: "g", Price: 8},
 //				},
 //			),
-// 		)
+//		)
 //
 //		books.Sort(func(i, j *Book) bool {
 //			return i.Price > j.Price
@@ -50,6 +50,7 @@ package collection
 
 import (
 	"container/list"
+	"iter"
 	"reflect"
 )
 
@@ -92,50 +93,39 @@ func New[T item](d []T) *Collection[T] {
 
 // Each iterates over the collection and applies the given function to each item.
 func (c *Collection[T]) Each(f func(i T)) *Collection[T] {
-	for current := c.data.Front(); current != nil; current = current.Next() {
-		var currentItem T = current.Value.(T)
-		f(currentItem)
-	}
+	c.Value()(func(i T) bool {
+		f(i)
+		return true
+	})
 	return c
 }
 
 // Map applies the given function to each item in the collection and replaces the item with the result.
 func (c *Collection[T]) Map(f func(i T) T) *Collection[T] {
-	for current := c.data.Front(); current != nil; current = current.Next() {
-		var currentItem T = current.Value.(T)
-		currentItem = f(currentItem)
-		current.Value = currentItem
-	}
+	c.all()(func(item *list.Element, value T) bool {
+		value = f(value)
+		item.Value = value
+		return true
+	})
 	return c
 }
 
 // Filter filters the collection using the given function and retains only the items for which the function returns true.
 func (c *Collection[T]) Filter(f func(i T) bool) *Collection[T] {
 	match := list.New()
-	for current := c.data.Back(); current != nil; current = current.Prev() {
-		var currentItem T = current.Value.(T)
-		if f(currentItem) {
-			match.PushFront(currentItem)
+	c.Value()(func(value T) bool {
+		if f(value) {
+			match.PushBack(value)
 		}
-	}
+		return true
+	})
 	c.data = match
 	return c
-
 }
 
 // Len returns the length of the collection.
 func (c *Collection[T]) Len() int {
 	return c.data.Len()
-}
-
-// Value returns a slice containing all the items in the collection.
-func (c *Collection[T]) Value() []T {
-	lt := make([]T, 0)
-	for current := c.data.Front(); current != nil; current = current.Next() {
-		var currentItem T = current.Value.(T)
-		lt = append(lt, currentItem)
-	}
-	return lt
 }
 
 // Merge can be used to merge two collections
@@ -177,4 +167,60 @@ func (c *Collection[T]) Peek(i int) T {
 		current = current.Next()
 	}
 	return current.Value.(T)
+}
+
+// Clone returns a new collection that is a copy of the current collection.
+func (c *Collection[T]) Clone() *Collection[T] {
+	clone := list.New()
+	c.all()(func(item *list.Element, value T) bool {
+		clone.PushBack(value)
+		return true
+	})
+	return &Collection[T]{data: clone, itemIsPtr: c.itemIsPtr}
+}
+
+// Reverse reverses the order of the collection.
+func (c *Collection[T]) Reverse() *Collection[T] {
+	reverse := list.New()
+	c.Value()(func(value T) bool {
+		reverse.PushFront(value)
+		return true
+	})
+	c.data = reverse
+	return c
+}
+
+// Value returns a interator that yields all the items value in the collection.
+func (c *Collection[T]) Value() iter.Seq[T] {
+	return func(yield func(T) bool) {
+		for current := c.data.Front(); current != nil; current = current.Next() {
+			if !yield(current.Value.(T)) {
+				return
+			}
+		}
+	}
+}
+
+// all returns a interator that yields all the items with their values in the collection.
+func (c *Collection[T]) all() iter.Seq2[*list.Element, T] {
+	return func(yield func(*list.Element, T) bool) {
+		for current := c.data.Front(); current != nil; current = current.Next() {
+			if !yield(current, current.Value.(T)) {
+				return
+			}
+		}
+	}
+}
+
+// All returns a interator that yields index their values in the collection.
+func (c *Collection[T]) All() iter.Seq2[int, T] {
+	return func(yield func(int, T) bool) {
+		index := 0
+		for value := range c.Value() {
+			if !yield(index, value) {
+				return
+			}
+			index++
+		}
+	}
 }
